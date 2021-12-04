@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/libuvccamera" />
             <option value="$PROJECT_DIR$/usbCameraCommon" />
             <option value="$PROJECT_DIR$/usbCameraTest" />
+            <option value="$PROJECT_DIR$/usbCameraTest0" />
             <option value="$PROJECT_DIR$/usbCameraTest8" />
           </set>
         </option>
