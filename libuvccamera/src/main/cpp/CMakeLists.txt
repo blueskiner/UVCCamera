@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.10.2)
 
 # Declares and names the project.
 
-project("uvccamera")
+project("UVCCamera")
 
 #add_subdirectory(libjpeg-turbo)
 
@@ -116,7 +116,7 @@ set_target_properties(turbojpeg PROPERTIES IMPORTED_LOCATION ${jniLibs_path}/lib
 # Gradle automatically packages shared libraries with your APK.
 
 add_library( # Sets the name of the library.
-        uvccamera
+        UVCCamera
 
         # Sets the library as a shared library.
         SHARED
@@ -230,7 +230,7 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-        uvccamera
+        UVCCamera
 
         android
         jnigraphics
@@ -238,6 +238,7 @@ target_link_libraries( # Specifies the target library.
         # libjpeg-turbo
         jpeg
         turbojpeg
+
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})

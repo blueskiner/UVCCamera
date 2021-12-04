@@ -23,9 +23,13 @@
 
 package com.serenegiant.usbcameratest8;
 
+import android.Manifest;
 import android.animation.Animator;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
@@ -39,6 +43,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.serenegiant.common.BaseActivity;
 
@@ -61,27 +66,27 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	 *  by almost same way as USBCameratest2)
 	 * set false if you want to record movie using MediaVideoEncoder
 	 */
-    private static final boolean USE_SURFACE_ENCODER = false;
+	private static final boolean USE_SURFACE_ENCODER = false;
 
-    /**
-     * preview resolution(width)
-     * if your camera does not support specific resolution and mode,
-     * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
-     */
-    private static final int PREVIEW_WIDTH = 640;
-    /**
-     * preview resolution(height)
-     * if your camera does not support specific resolution and mode,
-     * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
-     */
-    private static final int PREVIEW_HEIGHT = 480;
-    /**
-     * preview mode
-     * if your camera does not support specific resolution and mode,
-     * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
-     * 0:YUYV, other:MJPEG
-     */
-    private static final int PREVIEW_MODE = 1;
+	/**
+	 * preview resolution(width)
+	 * if your camera does not support specific resolution and mode,
+	 * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
+	 */
+	private static final int PREVIEW_WIDTH = 640;
+	/**
+	 * preview resolution(height)
+	 * if your camera does not support specific resolution and mode,
+	 * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
+	 */
+	private static final int PREVIEW_HEIGHT = 480;
+	/**
+	 * preview mode
+	 * if your camera does not support specific resolution and mode,
+	 * {@link UVCCamera#setPreviewSize(int, int, int)} throw exception
+	 * 0:YUYV, other:MJPEG
+	 */
+	private static final int PREVIEW_MODE = 1;
 
 	protected static final int SETTINGS_HIDE_DELAY_MS = 2500;
 
@@ -142,7 +147,17 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
 		mCameraHandler = UVCCameraHandler.createHandler(this, mUVCCameraView,
-			USE_SURFACE_ENCODER ? 0 : 1, PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE);
+				USE_SURFACE_ENCODER ? 0 : 1, PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE);
+
+		// 动态申请相机权限
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.CAMERA)) {
+				requestPermissions(new String[] {
+						Manifest.permission.CAMERA,
+						Manifest.permission.WRITE_EXTERNAL_STORAGE
+				}, 1);
+			}
+		}
 	}
 
 	@Override
@@ -167,17 +182,17 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	@Override
 	public void onDestroy() {
 		if (DEBUG) Log.v(TAG, "onDestroy:");
-        if (mCameraHandler != null) {
-	        mCameraHandler.release();
-	        mCameraHandler = null;
-        }
-        if (mUSBMonitor != null) {
-	        mUSBMonitor.destroy();
-	        mUSBMonitor = null;
-        }
-        mUVCCameraView = null;
-        mCameraButton = null;
-        mCaptureButton = null;
+		if (mCameraHandler != null) {
+			mCameraHandler.release();
+			mCameraHandler = null;
+		}
+		if (mUSBMonitor != null) {
+			mUSBMonitor.destroy();
+			mUSBMonitor = null;
+		}
+		mUVCCameraView = null;
+		mCameraButton = null;
+		mCaptureButton = null;
 		super.onDestroy();
 	}
 
@@ -188,45 +203,45 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		@Override
 		public void onClick(final View view) {
 			switch (view.getId()) {
-			case R.id.capture_button:
-				if (mCameraHandler.isOpened()) {
-					if (checkPermissionWriteExternalStorage() && checkPermissionAudio()) {
-						if (!mCameraHandler.isRecording()) {
-							mCaptureButton.setColorFilter(0xffff0000);	// turn red
-							mCameraHandler.startRecording();
-						} else {
-							mCaptureButton.setColorFilter(0);	// return to default color
-							mCameraHandler.stopRecording();
+				case R.id.capture_button:
+					if (mCameraHandler.isOpened()) {
+						if (checkPermissionWriteExternalStorage() && checkPermissionAudio()) {
+							if (!mCameraHandler.isRecording()) {
+								mCaptureButton.setColorFilter(0xffff0000);	// turn red
+								mCameraHandler.startRecording();
+							} else {
+								mCaptureButton.setColorFilter(0);	// return to default color
+								mCameraHandler.stopRecording();
+							}
 						}
 					}
-				}
-				break;
-			case R.id.brightness_button:
-				showSettings(UVCCamera.PU_BRIGHTNESS);
-				break;
-			case R.id.contrast_button:
-				showSettings(UVCCamera.PU_CONTRAST);
-				break;
-			case R.id.reset_button:
-				resetSettings();
-				break;
+					break;
+				case R.id.brightness_button:
+					showSettings(UVCCamera.PU_BRIGHTNESS);
+					break;
+				case R.id.contrast_button:
+					showSettings(UVCCamera.PU_CONTRAST);
+					break;
+				case R.id.reset_button:
+					resetSettings();
+					break;
 			}
 		}
 	};
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
-		= new CompoundButton.OnCheckedChangeListener() {
+			= new CompoundButton.OnCheckedChangeListener() {
 		@Override
 		public void onCheckedChanged(final CompoundButton compoundButton, final boolean isChecked) {
 			switch (compoundButton.getId()) {
-			case R.id.camera_button:
-				if (isChecked && !mCameraHandler.isOpened()) {
-					CameraDialog.showDialog(MainActivity.this);
-				} else {
-					mCameraHandler.close();
-					setCameraButton(false);
-				}
-				break;
+				case R.id.camera_button:
+					if (isChecked && !mCameraHandler.isOpened()) {
+						CameraDialog.showDialog(MainActivity.this);
+					} else {
+						mCameraHandler.close();
+						setCameraButton(false);
+					}
+					break;
 			}
 		}
 	};
@@ -238,13 +253,13 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		@Override
 		public boolean onLongClick(final View view) {
 			switch (view.getId()) {
-			case R.id.camera_view:
-				if (mCameraHandler.isOpened()) {
-					if (checkPermissionWriteExternalStorage()) {
-						mCameraHandler.captureStill();
+				case R.id.camera_view:
+					if (mCameraHandler.isOpened()) {
+						if (checkPermissionWriteExternalStorage()) {
+							mCameraHandler.captureStill();
+						}
+						return true;
 					}
-					return true;
-				}
 			}
 			return false;
 		}
@@ -338,7 +353,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		}
 	}
 
-//================================================================================
+	//================================================================================
 	private boolean isActive() {
 		return mCameraHandler != null && mCameraHandler.isOpened();
 	}
@@ -370,11 +385,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 			final int visible_active = isActive() ? View.VISIBLE : View.INVISIBLE;
 			mToolsLayout.setVisibility(visible_active);
 			mBrightnessButton.setVisibility(
-		    	checkSupportFlag(UVCCamera.PU_BRIGHTNESS)
-		    	? visible_active : View.INVISIBLE);
+					checkSupportFlag(UVCCamera.PU_BRIGHTNESS)
+							? visible_active : View.INVISIBLE);
 			mContrastButton.setVisibility(
-		    	checkSupportFlag(UVCCamera.PU_CONTRAST)
-		    	? visible_active : View.INVISIBLE);
+					checkSupportFlag(UVCCamera.PU_CONTRAST)
+							? visible_active : View.INVISIBLE);
 		}
 	};
 
@@ -388,12 +403,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		hideSetting(false);
 		if (isActive()) {
 			switch (mode) {
-			case UVCCamera.PU_BRIGHTNESS:
-			case UVCCamera.PU_CONTRAST:
-				mSettingMode = mode;
-				mSettingSeekbar.setProgress(getValue(mode));
-				ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
-				break;
+				case UVCCamera.PU_BRIGHTNESS:
+				case UVCCamera.PU_CONTRAST:
+					mSettingMode = mode;
+					mSettingSeekbar.setProgress(getValue(mode));
+					ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
+					break;
 			}
 		}
 	}
@@ -401,10 +416,10 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private void resetSettings() {
 		if (isActive()) {
 			switch (mSettingMode) {
-			case UVCCamera.PU_BRIGHTNESS:
-			case UVCCamera.PU_CONTRAST:
-				mSettingSeekbar.setProgress(resetValue(mSettingMode));
-				break;
+				case UVCCamera.PU_BRIGHTNESS:
+				case UVCCamera.PU_CONTRAST:
+					mSettingSeekbar.setProgress(resetValue(mSettingMode));
+					break;
 			}
 		}
 		mSettingMode = -1;
@@ -464,17 +479,17 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 			runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
 			if (isActive() && checkSupportFlag(mSettingMode)) {
 				switch (mSettingMode) {
-				case UVCCamera.PU_BRIGHTNESS:
-				case UVCCamera.PU_CONTRAST:
-					setValue(mSettingMode, seekBar.getProgress());
-					break;
+					case UVCCamera.PU_BRIGHTNESS:
+					case UVCCamera.PU_CONTRAST:
+						setValue(mSettingMode, seekBar.getProgress());
+						break;
 				}
 			}	// if (active)
 		}
 	};
 
 	private final ViewAnimationHelper.ViewAnimationListener
-		mViewAnimationListener = new ViewAnimationHelper.ViewAnimationListener() {
+			mViewAnimationListener = new ViewAnimationHelper.ViewAnimationListener() {
 		@Override
 		public void onAnimationStart(@NonNull final Animator animator, @NonNull final View target, final int animationType) {
 //			if (DEBUG) Log.v(TAG, "onAnimationStart:");
@@ -484,22 +499,22 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		public void onAnimationEnd(@NonNull final Animator animator, @NonNull final View target, final int animationType) {
 			final int id = target.getId();
 			switch (animationType) {
-			case ViewAnimationHelper.ANIMATION_FADE_IN:
-			case ViewAnimationHelper.ANIMATION_FADE_OUT:
-			{
-				final boolean fadeIn = animationType == ViewAnimationHelper.ANIMATION_FADE_IN;
-				if (id == R.id.value_layout) {
-					if (fadeIn) {
-						runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
-					} else {
-						mValueLayout.setVisibility(View.GONE);
-						mSettingMode = -1;
+				case ViewAnimationHelper.ANIMATION_FADE_IN:
+				case ViewAnimationHelper.ANIMATION_FADE_OUT:
+				{
+					final boolean fadeIn = animationType == ViewAnimationHelper.ANIMATION_FADE_IN;
+					if (id == R.id.value_layout) {
+						if (fadeIn) {
+							runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
+						} else {
+							mValueLayout.setVisibility(View.GONE);
+							mSettingMode = -1;
+						}
+					} else if (!fadeIn) {
+//						target.setVisibility(View.GONE);
 					}
-				} else if (!fadeIn) {
-//					target.setVisibility(View.GONE);
+					break;
 				}
-				break;
-			}
 			}
 		}
 
